@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+// @ts-ignore
 import { Pool } from "pg";
 
 export async function GET() {
