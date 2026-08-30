@@ -74,24 +74,23 @@ const sections = [
   },
 ];
 
-// Simple keyboard key component
 function Key({
   label,
-  wide = false,
+  width = 1,
   active = false,
 }: {
   label: string;
-  wide?: boolean;
+  width?: number;
   active?: boolean;
 }) {
   return (
     <div
-      className={`flex h-10 items-center justify-center rounded-md border text-xs font-medium transition
-        ${wide ? "px-4 min-w-[60px]" : "w-10"}
+      style={{ flex: width }}
+      className={`flex h-11 items-center justify-center rounded-md border text-[11px] font-medium select-none
         ${
           active
-            ? "border-white/40 bg-white text-black"
-            : "border-white/10 bg-zinc-900 text-zinc-500"
+            ? "border-white/50 bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.15)]"
+            : "border-white/10 bg-zinc-900/80 text-zinc-500"
         }`}
     >
       {label}
@@ -100,7 +99,8 @@ function Key({
 }
 
 export default function WikiPage() {
-  const activeKeys = keybinds.map((k) => k.key);
+  const active = (key: string) =>
+    keybinds.some((k) => k.key === key || (key === "Alt" && k.key === "Left Alt"));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -112,92 +112,82 @@ export default function WikiPage() {
       </div>
 
       {/* Keyboard + Keybinds */}
-      <div className="mt-14 grid gap-8 lg:grid-cols-3">
+      <div className="mt-14 grid gap-6 lg:grid-cols-3">
         {/* Keyboard */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <h2 className="mb-5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Keyboard
           </h2>
 
-          <div className="space-y-2 overflow-x-auto">
-            {/* Function row */}
+          <div className="mx-auto max-w-3xl space-y-1.5">
+            {/* F-row */}
             <div className="flex gap-1.5">
-              {["Esc", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].map(
-                (k) => (
-                  <Key key={k} label={k} active={activeKeys.includes(k)} />
-                )
-              )}
+              <Key label="Esc" width={1.2} />
+              <div className="w-3" />
+              {["F1","F2","F3","F4"].map(k => <Key key={k} label={k} active={active(k)} />)}
+              <div className="w-3" />
+              {["F5","F6","F7","F8"].map(k => <Key key={k} label={k} active={active(k)} />)}
+              <div className="w-3" />
+              {["F9","F10","F11","F12"].map(k => <Key key={k} label={k} active={active(k)} />)}
             </div>
 
             {/* Number row */}
             <div className="flex gap-1.5">
-              {["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Back"].map(
-                (k) => (
-                  <Key key={k} label={k} wide={k === "Back"} active={activeKeys.includes(k)} />
-                )
-              )}
+              {["`","1","2","3","4","5","6","7","8","9","0","-","="].map(k => (
+                <Key key={k} label={k} active={active(k)} />
+              ))}
+              <Key label="Backspace" width={2} />
             </div>
 
-            {/* QWERTY */}
+            {/* Q row */}
             <div className="flex gap-1.5">
-              {["Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\"].map(
-                (k) => (
-                  <Key key={k} label={k} wide={k === "Tab"} active={activeKeys.includes(k)} />
-                )
-              )}
+              <Key label="Tab" width={1.5} />
+              {["Q","W","E","R","T","Y","U","I","O","P","[","]"].map(k => (
+                <Key key={k} label={k} active={active(k)} />
+              ))}
+              <Key label="\\" width={1.5} />
             </div>
 
-            {/* ASDF */}
+            {/* A row */}
             <div className="flex gap-1.5">
-              {["Caps", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'", "Enter"].map(
-                (k) => (
-                  <Key
-                    key={k}
-                    label={k}
-                    wide={k === "Caps" || k === "Enter"}
-                    active={activeKeys.includes(k)}
-                  />
-                )
-              )}
+              <Key label="Caps" width={1.8} />
+              {["A","S","D","F","G","H","J","K","L",";","'"].map(k => (
+                <Key key={k} label={k} active={active(k)} />
+              ))}
+              <Key label="Enter" width={2.2} />
             </div>
 
-            {/* ZXCV */}
+            {/* Z row */}
             <div className="flex gap-1.5">
-              {["Shift", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/", "Shift"].map(
-                (k, i) => (
-                  <Key
-                    key={k + i}
-                    label={k}
-                    wide={k === "Shift"}
-                    active={activeKeys.includes(k)}
-                  />
-                )
-              )}
+              <Key label="Shift" width={2.4} />
+              {["Z","X","C","V","B","N","M",",",".","/"].map(k => (
+                <Key key={k} label={k} active={active(k)} />
+              ))}
+              <Key label="Shift" width={2.4} />
             </div>
 
             {/* Bottom row */}
             <div className="flex gap-1.5">
-              {["Ctrl", "Win", "Alt", "Space", "Alt", "Fn", "Ctrl"].map((k, i) => (
-                <Key
-                  key={k + i}
-                  label={k}
-                  wide={k === "Space"}
-                  active={activeKeys.includes(k) || (k === "Alt" && activeKeys.includes("Left Alt"))}
-                />
-              ))}
+              <Key label="Ctrl" width={1.5} />
+              <Key label="Win" width={1.2} />
+              <Key label="Alt" width={1.2} active={active("Alt")} />
+              <Key label="Space" width={6.5} />
+              <Key label="Alt" width={1.2} active={active("Alt")} />
+              <Key label="Fn" width={1.2} />
+              <Key label="Ctrl" width={1.5} />
             </div>
           </div>
         </div>
 
         {/* Keybind list */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+          <h2 className="mb-6 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Keybinds
           </h2>
           <ul className="space-y-3">
             {keybinds.map((bind) => (
-              <li key={bind.key} className="flex items-center justify-between gap-4">
-                <span className="rounded-md border border-white/20 bg-white px-2.5 py-1 text-xs font-bold text-black">
+              <li key={bind.key} className="flex items-center justify-between gap-3">
+                <span className="min-w-[70px] rounded-md border border-white/20 bg-white px-2.5 py-1 text-center text-xs font-bold text-black">
                   {bind.key}
                 </span>
                 <span className="text-sm text-zinc-300">{bind.action}</span>
