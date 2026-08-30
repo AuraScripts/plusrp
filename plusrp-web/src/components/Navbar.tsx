@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getUserCredits } from "@/lib/db";
-import { Coins, Menu } from "lucide-react";
-import MobileNav from "./MobileNav"; // we will keep it simple
+import { Coins } from "lucide-react";
 
 const links = [
   { href: "/", label: "Home" },
@@ -36,7 +35,6 @@ export default async function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
           {links.map((link) => (
             <Link
