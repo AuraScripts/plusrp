@@ -1,7 +1,41 @@
 import Link from "next/link";
 import { Users, Clock, ShoppingBag, BookOpen } from "lucide-react";
 
-export default function HomePage() {
+async function getStats() {
+  const API_URL = "http://185.80.130.45:3002";
+  const API_KEY = "plusrp_secret_key_change_me_123";
+
+  try {
+    const [registeredRes, playtimeRes] = await Promise.all([
+      fetch(`${API_URL}/stats/registered`, {
+        headers: { "x-api-key": API_KEY },
+        next: { revalidate: 60 }, // cache 60 seconds
+      }),
+      fetch(`${API_URL}/stats/top-playtime`, {
+        headers: { "x-api-key": API_KEY },
+        next: { revalidate: 60 },
+      }),
+    ]);
+
+    const registered = registeredRes.ok ? await registeredRes.json() : { count: 0 };
+    const topPlaytime = playtimeRes.ok ? await playtimeRes.json() : { playtime: 0 };
+
+    // Convert seconds to hours
+    const hours = Math.floor((topPlaytime.playtime || 0) / 3600);
+
+    return {
+      registered: registered.count || 0,
+      topPlaytime: hours > 0 ? `${hours}h` : "—",
+    };
+  } catch (e) {
+    console.error("Stats fetch error:", e);
+    return { registered: 0, topPlaytime: "—" };
+  }
+}
+
+export default async function HomePage() {
+  const stats = await getStats();
+
   return (
     <div className="relative">
       {/* Hero */}
@@ -43,8 +77,8 @@ export default function HomePage() {
           <div className="mt-20 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               { label: "Online Players", value: "— / 128", icon: Users },
-              { label: "Registered", value: "—", icon: Users },
-              { label: "Playtime Record", value: "—", icon: Clock },
+              { label: "Registered", value: stats.registered.toLocaleString(), icon: Users },
+              { label: "Playtime Record", value: stats.topPlaytime, icon: Clock },
               { label: "Discord Members", value: "—", icon: Users },
             ].map((stat) => (
               <div
