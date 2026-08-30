@@ -1,31 +1,6 @@
 import { auth, signIn, signOut } from "@/lib/auth";
+import { getOrCreateUser } from "@/lib/db";
 import { User, LogOut, Coins, Briefcase, Clock } from "lucide-react";
-
-async function getPlayerData(discordId: string) {
-  try {
-    const res = await fetch(
-      `${process.env.VPS_API_URL}/player/${discordId}`,
-      {
-        headers: {
-          "x-api-key": process.env.VPS_API_KEY || "",
-        },
-        next: { revalidate: 30 },
-      }
-    );
-
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-function formatPlaytime(minutes: number | null) {
-  if (!minutes || minutes <= 0) return "—";
-  const h = Math.floor(minutes / 60);
-  const m = Math.floor(minutes % 60);
-  return `${h}h ${m}m`;
-}
 
 export default async function AccountPage() {
   const session = await auth();
@@ -62,7 +37,20 @@ export default async function AccountPage() {
   }
 
   const user = session.user as any;
-  const player = await getPlayerData(user.discordId);
+  const discordId = user.discordId;
+
+  // Create or get user from database + get credits
+  let credits = 0;
+  try {
+    const dbUser = await getOrCreateUser(
+      discordId,
+      user.username || user.name,
+      user.image
+    );
+    credits = dbUser.credits ?? 0;
+  } catch (e) {
+    console.error("DB error:", e);
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -83,7 +71,7 @@ export default async function AccountPage() {
             <h1 className="text-2xl font-bold text-white">
               {user.username || user.name}
             </h1>
-            <p className="text-sm text-zinc-400">Discord ID: {user.discordId}</p>
+            <p className="text-sm text-zinc-400">Discord ID: {discordId}</p>
           </div>
         </div>
 
@@ -110,7 +98,7 @@ export default async function AccountPage() {
             <Coins className="h-4 w-4 text-yellow-400" />
             <span className="text-sm">Credits</span>
           </div>
-          <p className="mt-2 text-2xl font-bold text-white">0</p>
+          <p className="mt-2 text-2xl font-bold text-white">{credits}</p>
           <p className="mt-1 text-xs text-zinc-500">Website balance</p>
         </div>
 
@@ -119,12 +107,8 @@ export default async function AccountPage() {
             <Briefcase className="h-4 w-4" />
             <span className="text-sm">Job</span>
           </div>
-          <p className="mt-2 text-2xl font-bold text-white">
-            {player?.job || "—"}
-          </p>
-          <p className="mt-1 text-xs text-zinc-500">
-            {player?.job_grade !== undefined ? `Grade ${player.job_grade}` : "Loaded from server"}
-          </p>
+          <p className="mt-2 text-2xl font-bold text-white">—</p>
+          <p className="mt-1 text-xs text-zinc-500">From server</p>
         </div>
 
         <div className="rounded-xl border border-white/10 bg-white/5 p-5">
@@ -132,9 +116,7 @@ export default async function AccountPage() {
             <Clock className="h-4 w-4" />
             <span className="text-sm">Playtime</span>
           </div>
-          <p className="mt-2 text-2xl font-bold text-white">
-            {formatPlaytime(player?.playtime)}
-          </p>
+          <p className="mt-2 text-2xl font-bold text-white">—</p>
           <p className="mt-1 text-xs text-zinc-500">From txAdmin</p>
         </div>
       </div>
@@ -143,31 +125,19 @@ export default async function AccountPage() {
       <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
         <h2 className="text-lg font-semibold text-white">Character</h2>
         <p className="mt-1 text-sm text-zinc-400">
-          Data fetched from the server using your Discord ID.
+          Data is fetched from the server using your Discord ID.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div>
             <p className="text-xs text-zinc-500">Character name</p>
-            <p className="mt-1 font-medium text-white">
-              {player?.name || "—"}
-            </p>
+            <p className="mt-1 font-medium text-white">—</p>
           </div>
           <div>
             <p className="text-xs text-zinc-500">Last seen</p>
-            <p className="mt-1 font-medium text-white">
-              {player?.last_seen
-                ? new Date(player.last_seen).toLocaleString()
-                : "—"}
-            </p>
+            <p className="mt-1 font-medium text-white">—</p>
           </div>
         </div>
-
-        {!player?.found && (
-          <p className="mt-6 text-xs text-zinc-500">
-            No character found for this Discord ID in the database.
-          </p>
-        )}
       </div>
     </div>
   );
